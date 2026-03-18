@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { OPTION_CHAIN_POLL_FAILURE, OPTION_CHAIN_POLL_REQUEST, OPTION_CHAIN_POLL_SUCCESS } from './types';
+import { OPTION_CHAIN_POLL_FAILURE, OPTION_CHAIN_POLL_REQUEST, OPTION_CHAIN_POLL_SUCCESS, OPTION_CHAIN_RESET_STATE } from './types';
 
 export interface OptionChainSnapshot {
   captured_at: string;
@@ -28,6 +28,7 @@ const optionChainSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      .addCase(OPTION_CHAIN_RESET_STATE, () => initialState)
       .addCase(OPTION_CHAIN_POLL_REQUEST, (state) => {
         state.loading = true;
         state.error = null;

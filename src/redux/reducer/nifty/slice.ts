@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { NIFTY_POLL_FAILURE, NIFTY_POLL_REQUEST, NIFTY_POLL_SUCCESS } from './types';
+import { NIFTY_POLL_FAILURE, NIFTY_POLL_REQUEST, NIFTY_POLL_SUCCESS, NIFTY_RESET_STATE } from './types';
 
 export interface NiftySnapshot {
   captured_at: string;
@@ -39,6 +39,7 @@ const niftySlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(NIFTY_RESET_STATE, () => initialState)
       .addCase(NIFTY_POLL_REQUEST, (state) => {
         state.loading = true;
         state.error = null;

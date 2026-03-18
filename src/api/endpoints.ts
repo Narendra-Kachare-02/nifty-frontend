@@ -10,6 +10,7 @@ export const endpoints = {
   NIFTY_LATEST: 'api/nifty/latest/',
   NIFTY_SERIES: 'api/nifty/series/',
   NIFTY_OPTION_CHAIN_LATEST: 'api/nifty/option-chain/latest/',
+  NIFTY_BOOTSTRAP: 'api/nifty/bootstrap/',
 
 
 } as const;

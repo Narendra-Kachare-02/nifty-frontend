@@ -8,7 +8,7 @@ import {
   type LineData,
 } from 'lightweight-charts';
 
-export type NiftyRange = '15M' | '30M' | '1H' | '1D';
+export type NiftyRange = '1D' | '1M' | '3M' | '6M' | '1Y';
 
 interface NiftyPriceChartProps {
   range: NiftyRange;
@@ -17,7 +17,20 @@ interface NiftyPriceChartProps {
 }
 
 function toLineData(series: Array<{ time: number; value: number }>): LineData[] {
-  return series.map((p) => ({ time: p.time as any, value: p.value }));
+  // lightweight-charts requires strictly ascending, unique times.
+  // NSE chart data can contain duplicate timestamps, so we normalize here.
+  const sorted = [...series].sort((a, b) => a.time - b.time);
+  const deduped: Array<{ time: number; value: number }> = [];
+  for (const p of sorted) {
+    const last = deduped[deduped.length - 1];
+    if (last && last.time === p.time) {
+      // Keep the latest value for this timestamp.
+      last.value = p.value;
+    } else {
+      deduped.push({ time: p.time, value: p.value });
+    }
+  }
+  return deduped.map((p) => ({ time: p.time as any, value: p.value }));
 }
 
 export const NiftyPriceChart: React.FC<NiftyPriceChartProps> = ({ series, baseline }) => {

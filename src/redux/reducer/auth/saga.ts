@@ -14,6 +14,9 @@ import { endpoints } from '../../../api/endpoints';
 import { navigateTo } from '../../../common/utils/navigationRef';
 import { ROUTES } from '../../../common/routes';
 import { sendOtp, verifyOtp, refreshToken, logout } from './action';
+import { NIFTY_RESET_STATE } from '../nifty/types';
+import { OPTION_CHAIN_RESET_STATE } from '../optionChain/types';
+import { NIFTY_SERIES_RESET_STATE } from '../niftySeries/types';
 
 function getErrorMessage(err: unknown): string {
   if (err && typeof err === 'object' && 'message' in err) return (err as { message: string }).message;
@@ -97,7 +100,13 @@ function* refreshTokenSaga(): SagaIterator {
 }
 
 function* logoutSaga(): SagaIterator {
+  // Reset *all* feature reducers before clearing persisted storage.
+  // This avoids stale market data flashing during navigation and prevents
+  // reducers from briefly rehydrating incompatible state.
   yield put({ type: AUTH_RESET_STATE });
+  yield put({ type: NIFTY_RESET_STATE });
+  yield put({ type: OPTION_CHAIN_RESET_STATE });
+  yield put({ type: NIFTY_SERIES_RESET_STATE });
   navigateTo(ROUTES.SIGNIN);
   localStorage.clear();
 }

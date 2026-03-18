@@ -8,6 +8,7 @@ import { selectOptionChainLatest, selectOptionChainLoading } from '../../../redu
 import { pollOptionChain } from '../../../redux/reducer/optionChain';
 import { NiftyPriceChart, type NiftyRange } from './NiftyPriceChart';
 import { useFetchNiftySeries } from './useFetchNiftySeries';
+import { NIFTY_OPTION_LOT_SIZE } from '../../../common/constants';
 
 function formatNumber(value: any): string {
   const n = typeof value === 'number' ? value : Number(value);
@@ -37,7 +38,7 @@ export const NiftyScreen = () => {
   usePollNifty();
   usePollOptionChain();
 
-  const { series } = useFetchNiftySeries(range);
+  const { series, closePrice } = useFetchNiftySeries(range);
 
   // First load (fast render even before interval starts)
   useEffect(() => {
@@ -59,7 +60,7 @@ export const NiftyScreen = () => {
   const isUp = Number(change) > 0;
   const changeColor = isUp ? 'text-emerald-600' : Number(change) < 0 ? 'text-rose-600' : 'text-gray-600';
 
-  const baseline = latest?.metadata?.previousClose ?? indexRow?.previousClose ?? null;
+  const baseline = closePrice ?? latest?.metadata?.previousClose ?? null;
 
   const ocRows = useMemo(() => {
     const payload = optionChainLatest?.payload;
@@ -90,16 +91,70 @@ export const NiftyScreen = () => {
       .map((d: any) => {
         const ce = d?.CE ?? {};
         const pe = d?.PE ?? {};
+        const ceOiLots = ce?.openInterest;
+        const peOiLots = pe?.openInterest;
+        const ceOiContracts =
+          typeof ceOiLots === 'number'
+            ? ceOiLots * NIFTY_OPTION_LOT_SIZE
+            : ceOiLots != null && !Number.isNaN(Number(ceOiLots))
+              ? Number(ceOiLots) * NIFTY_OPTION_LOT_SIZE
+              : ceOiLots;
+        const peOiContracts =
+          typeof peOiLots === 'number'
+            ? peOiLots * NIFTY_OPTION_LOT_SIZE
+            : peOiLots != null && !Number.isNaN(Number(peOiLots))
+              ? Number(peOiLots) * NIFTY_OPTION_LOT_SIZE
+              : peOiLots;
         return {
           strike: d?.strikePrice,
-          ceOi: ce?.openInterest,
+          ceOi: ceOiContracts,
+          ceOiPct: ce?.pchangeinOpenInterest,
           ceLtp: ce?.lastPrice,
+          ceLtpPct: ce?.pchange,
           peLtp: pe?.lastPrice,
-          peOi: pe?.openInterest,
+          peLtpPct: pe?.pchange,
+          peOi: peOiContracts,
+          peOiPct: pe?.pchangeinOpenInterest,
           isAtm: Number(d?.strikePrice) === atmStrike,
         };
       });
   }, [optionChainLatest]);
+
+  const formatPct = (value: any): string | null => {
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n)) return null;
+    const sign = n > 0 ? '+' : '';
+    return `${sign}${n.toFixed(2)}%`;
+  };
+
+  const cellPctColor = (value: any): string => {
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n) || n === 0) return 'text-gray-500';
+    return n > 0 ? 'text-emerald-600' : 'text-rose-600';
+  };
+
+  const MetricCell = ({
+    value,
+    pct,
+    align = 'right',
+    currency = false,
+  }: {
+    value: any;
+    pct: any;
+    align?: 'right' | 'center';
+    currency?: boolean;
+  }) => {
+    const pctText = formatPct(pct);
+    const alignClass = align === 'center' ? 'text-center' : 'text-right';
+    return (
+      <div className={`flex flex-col ${alignClass} leading-tight`}>
+        <div className="text-[13px] font-semibold tabular-nums text-gray-900">
+          {currency ? `₹${formatNumber(value)}` : formatNumber(value)}
+        </div>
+        {pctText ? <div className={`text-[11px] font-semibold tabular-nums ${cellPctColor(pct)}`}>{pctText}</div> : <div className="h-[14px]" />}
+      </div>
+    );
+  };
 
   return (
     <div className="flex-1 min-h-0 overflow-hidden bg-gray-50">
@@ -132,7 +187,7 @@ export const NiftyScreen = () => {
           <div className="mt-5 flex items-center justify-between gap-3">
             <div className="text-xs font-semibold text-gray-600">Range</div>
             <div className="flex items-center gap-2">
-              {(['15M', '30M', '1H', '1D'] as const).map((r) => {
+              {(['1D', '1M', '3M', '6M', '1Y'] as const).map((r) => {
                 const active = r === range;
                 return (
                   <button
@@ -218,15 +273,18 @@ export const NiftyScreen = () => {
                   ocRows.map((r) => (
                     <div
                       key={String(r.strike)}
-                      className={`grid grid-cols-5 gap-2 px-2 py-2 text-xs border-b border-gray-50 hover:bg-gray-50/70 transition-colors ${
+                      className={`grid grid-cols-5 gap-2 px-2 py-2 border-b border-gray-50 hover:bg-gray-50/70 transition-colors ${
                         r.isAtm ? 'bg-blue-50/70' : ''
                       }`}
                     >
-                      <div className="text-right tabular-nums text-gray-800">{formatNumber(r.ceOi)}</div>
-                      <div className="text-right tabular-nums text-gray-800">{formatNumber(r.ceLtp)}</div>
-                      <div className="text-center tabular-nums font-semibold text-gray-900">{formatNumber(r.strike)}</div>
-                      <div className="text-right tabular-nums text-gray-800">{formatNumber(r.peLtp)}</div>
-                      <div className="text-right tabular-nums text-gray-800">{formatNumber(r.peOi)}</div>
+                      <MetricCell value={r.ceOi} pct={r.ceOiPct} />
+                      <MetricCell value={r.ceLtp} pct={r.ceLtpPct} currency />
+                      <div className="flex flex-col text-center leading-tight">
+                        <div className="text-[13px] font-extrabold tabular-nums text-gray-900">{formatNumber(r.strike)}</div>
+                        <div className={`text-[11px] font-semibold ${r.isAtm ? 'text-blue-700' : 'text-gray-400'}`}>{r.isAtm ? 'ATM' : ''}</div>
+                      </div>
+                      <MetricCell value={r.peLtp} pct={r.peLtpPct} currency />
+                      <MetricCell value={r.peOi} pct={r.peOiPct} />
                     </div>
                   ))
                 ) : (

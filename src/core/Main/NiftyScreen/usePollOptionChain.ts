@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../redux/store';
 import { pollOptionChain } from '../../../redux/reducer/optionChain';
 import { selectOptionChainLoading } from '../../../redux/reducer/optionChain/selectors';
-import { NIFTY_POLL_INTERVAL_MS } from './niftyConstants';
+import { NIFTY_POLL_INTERVAL_MS } from '../../../common/constants';
 
 export function usePollOptionChain(expiryDate?: string | null) {
   const dispatch = useAppDispatch();

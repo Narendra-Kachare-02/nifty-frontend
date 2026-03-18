@@ -1,46 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
-import { endpoints } from '../../../api/endpoints';
-import { AXIOS_AUTH_KIT } from '../../../api/axios';
+import { useEffect } from 'react';
+import { useAppDispatch, useAppSelector } from '../../../redux/store';
 import type { NiftyRange } from './NiftyPriceChart';
+import { fetchNiftySeries } from '../../../redux/reducer/niftySeries';
+import { selectNiftySeriesByRange, selectNiftySeriesError, selectNiftySeriesLoading } from '../../../redux/reducer/niftySeries/selectors';
 
 export function useFetchNiftySeries(range: NiftyRange) {
-  const [series, setSeries] = useState<Array<{ time: number; value: number }>>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const inflightRef = useRef(false);
+  const dispatch = useAppDispatch();
+  const cached = useAppSelector(selectNiftySeriesByRange(range));
+  const loading = useAppSelector(selectNiftySeriesLoading(range));
+  const error = useAppSelector(selectNiftySeriesError(range));
 
   useEffect(() => {
-    let isMounted = true;
+    if (cached) return;
+    dispatch(fetchNiftySeries({ range }));
+  }, [cached, dispatch, range]);
 
-    const fetchSeries = async () => {
-      if (inflightRef.current) return;
-      inflightRef.current = true;
-      setLoading(true);
-      setError(null);
-      try {
-        const url = `${endpoints.NIFTY_SERIES}?range=${encodeURIComponent(range)}`;
-        const res: any = await AXIOS_AUTH_KIT('GET', url);
-        const data = res?.data ?? res;
-        const points = Array.isArray(data?.series) ? data.series : [];
-        const cleaned = points
-          .filter((p: any) => typeof p?.time === 'number' && typeof p?.value === 'number')
-          .map((p: any) => ({ time: p.time, value: p.value }));
-        if (isMounted) setSeries(cleaned);
-      } catch (e: any) {
-        if (isMounted) setError(e?.message ?? 'Failed to load series');
-      } finally {
-        inflightRef.current = false;
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchSeries();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [range]);
-
-  return { series, loading, error };
+  return { series: cached?.series ?? [], closePrice: cached?.closePrice ?? null, loading, error };
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../redux/store';
 import { pollNifty } from '../../../redux/reducer/nifty';
 import { selectNiftyLoading } from '../../../redux/reducer/nifty/selectors';
-import { NIFTY_POLL_INTERVAL_MS } from './niftyConstants';
+import { NIFTY_POLL_INTERVAL_MS } from '../../../common/constants';
 
 export function usePollNifty() {
   const dispatch = useAppDispatch();

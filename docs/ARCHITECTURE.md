@@ -11,7 +11,7 @@
    - pauses when tab is hidden
    - prevents overlap (no new poll while loading)
 3. Hook `usePollOptionChain` starts polling option chain (same interval + visibility/overlap rules).
-4. Hook `useFetchNiftySeries(range)` loads chart series when range changes (`15M|30M|1H|1D`).
+4. Hook `useFetchNiftySeries(range)` loads chart series when range changes (`1D|1M|3M|6M|1Y`).
 5. Saga `watchNiftySaga` handles `pollNifty`:
    - calls `handleApiRequest('GET', endpoints.NIFTY_LATEST, ...)`
    - dispatches `NIFTY_POLL_SUCCESS` / `NIFTY_POLL_FAILURE`

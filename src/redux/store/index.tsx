@@ -10,7 +10,8 @@ const isDevToolsEnabled = import.meta.env.VITE_ENABLE_REDUX_DEVTOOLS === 'true';
 // Create saga middleware
 const sagaMiddleware = createSagaMiddleware();
 const persistConfig = {
-  key: 'root',
+  // Bump key when reducer structure changes to avoid rehydrate hangs
+  key: 'root_v2',
   storage: localstorage,
   // whitelist: [],
   // blacklist: ['appLoader'],
