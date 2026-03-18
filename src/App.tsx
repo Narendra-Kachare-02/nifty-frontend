@@ -5,17 +5,20 @@ import { persistor, store } from './redux/store'
 import { Loading } from './common/components'
 import { BrowserRouter } from "react-router"
 import { Core } from './core'
+import { ThemeProvider } from './common/context/ThemeContext'
 
 function App() {
   return (
     <StrictMode>
-      <Provider store={store}>
-        <PersistGate loading={<Loading />} persistor={persistor}>
-          <BrowserRouter>
-            <Core />
-          </BrowserRouter>
-        </PersistGate>
-      </Provider>
+      <ThemeProvider>
+        <Provider store={store}>
+          <PersistGate loading={<Loading />} persistor={persistor}>
+            <BrowserRouter>
+              <Core />
+            </BrowserRouter>
+          </PersistGate>
+        </Provider>
+      </ThemeProvider>
     </StrictMode>
   )
 }

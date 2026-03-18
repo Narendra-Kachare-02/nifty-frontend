@@ -19,7 +19,7 @@ export const Main = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
+    <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-all duration-300">
       <MainLayoutHeader
         title={BRAND_NAME}
         navItems={getMainNavItems()}
