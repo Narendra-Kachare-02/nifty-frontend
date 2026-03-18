@@ -3,6 +3,8 @@
 ## What this does
 - Renders a NIFTY 50 dashboard at `/nifty`.
 - Polls backend `GET /api/nifty/latest/` periodically.
+- Shows NSE Option Chain (5 columns) on the right.
+- Renders a professional price chart (time ranges + last marker).
 
 ## Setup
 
